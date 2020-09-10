@@ -1,19 +1,20 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"log"
 	"net"
-	"bufio"
 	"strings"
-	"fmt"
 )
-
-var users []net.Conn
 
 func handleConnection(c net.Conn) {
 	defer c.Close()
 	log.Println("Conected")
-	for { 
+
+	fmt.Fprintln(c, startMsg)
+	
+	for {
 		msg, err := bufio.NewReader(c).ReadString('\n')
 		if err != nil {
 			log.Fatal(err)
@@ -24,14 +25,14 @@ func handleConnection(c net.Conn) {
 			break
 		}
 
-		for _, user := range users {
-			if user != c {
-				fmt.Fprintln(user, msg)
+		for _, user := range server.Users{
+			if user.Connection != c {
+				fmt.Fprintln(user.Connection, msg)
 			}
-			
+
 		}
 	}
-	
+
 }
 
 func main() {
@@ -49,7 +50,11 @@ func main() {
 			log.Fatal(err)
 		}
 
-		users = append(users, conn)
+		var user = User{
+			Connection: conn,
+		}
+
+		server.Users = append(server.Users, user)
 
 		go handleConnection(conn)
 	}
