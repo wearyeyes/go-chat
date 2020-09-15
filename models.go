@@ -4,6 +4,7 @@ import (
 	"net"
 )
 
+// Message, which sending to each new user when connected.
 var startMsg = `
 	Hello!
 	This chat has next commands:
