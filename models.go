@@ -4,6 +4,16 @@ import (
 	"net"
 )
 
+var startMsg = `
+	Hello!
+	This chat has next commands:
+	- /msg
+	- /showrooms
+	- /mkroom
+	- /leaveroom
+	- /exit
+`
+
 type Server struct {
 	Users []*User
 	Rooms []*Room

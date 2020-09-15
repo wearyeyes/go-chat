@@ -8,7 +8,8 @@ import (
 
 func (s *Server) NewUser(conn net.Conn) {
 	log.Printf("New User Conected: %s", conn.RemoteAddr())
-
+	fmt.Fprintln(conn, startMsg)
+	
 	var nick string
 	fmt.Fprint(conn, "\nEnter your nickname: ")
 	fmt.Fscanln(conn, &nick)
@@ -24,9 +25,62 @@ func (s *Server) NewUser(conn net.Conn) {
 }
 
 func (s *Server) SendMessage(msg string, u *User) {
-	for _, user := range s.Users {
-		if user != u {
-			fmt.Fprintf(user.Conn, "> %s: %s\n", u.Nick, msg)
+	for _, room := range s.Rooms {
+		for _, user := range room.Users{
+			if user == u {
+				for _, rU := range room.Users {
+					if rU != u {
+						fmt.Fprintf(rU.Conn, "> %s: %s\n", u.Nick, msg)
+					}
+				}
+			}
+		}
+	}
+}
+
+func (s *Server) ShowRooms(u *User) {
+	if len(s.Rooms) == 0 {
+		fmt.Fprintln(u.Conn, "~ There's no rooms yet.")
+	} else {
+		for _, room := range s.Rooms {
+			fmt.Fprintln(u.Conn, "- ", room.Name)
+		}
+	}
+}
+
+func (s *Server) MakeRoom(name string) {
+	room := &Room{
+		Name: name,
+	}
+	s.Rooms = append(s.Rooms, room)
+}
+
+func (s *Server) JoinRoom(name string, u *User) {
+	for i, room := range s.Rooms {
+		if room.Name == name {
+			s.Rooms[i].Users = append(s.Rooms[i].Users, u)
+			return
+		}
+	} 
+	fmt.Fprintln(u.Conn, "This room doesn't exist.")
+
+}
+
+func (s *Server) LeaveRoom(u *User) {
+	for _, room := range s.Rooms {
+		for i, roomUser := range room.Users {
+			if roomUser == u {
+				room.Users = append(room.Users[:i], room.Users[i+1:]...)
+			}
+		}
+	}
+}
+
+func (s *Server) DeleteUser(u *User) {
+	s.LeaveRoom(u)
+	for i, user := range s.Users {
+		if user == u {
+			s.Users = append(s.Users[:i], s.Users[i+1:]...)
 		}
 	}
 }
